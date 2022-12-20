@@ -1,0 +1,44 @@
+{
+    "Parameters": {
+      "ThingName": {
+        "Type": "String"
+      },
+      "ThingSerialNumb": {
+        "Type": "String"
+      },
+      "ThingId": {
+        "Type": "String"
+      },
+      "CertificateId": {
+        "Type": "String"
+      }
+    },
+    "Resources": {
+      "thing": {
+        "Type": "AWS::IoT::Thing",
+        "Properties": {
+          "ThingName": {
+            "Ref": "ThingName"
+          },
+          "AttributePayload": {
+            "version": "v1",
+            "thingId": {
+              "Ref": "ThingId"
+            },
+            "ThingSerialNumb": {
+              "Ref": "ThingSerialNumb"
+            }
+          }
+        }
+      },
+      "certificate": {
+        "Type": "AWS::IoT::Certificate",
+        "Properties": {
+          "CertificateSigningRequest": {
+            "Ref": "CertificateId"
+          },
+          "Status": "Active"
+        }
+      }
+    }
+  }
