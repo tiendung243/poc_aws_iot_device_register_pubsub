@@ -3,32 +3,26 @@ import json
 import zipfile
 import uuid
 from awsiot import mqtt_connection_builder, mqtt
-import time
 import os
 from io import BytesIO
- 
+import time
+import threading
+import shutil
+
 ROOT_DIR = os.getcwd()
  
-def publish_one_message_per_second(mqtt_connection, topic_name):
-    current_number = 0
-    while 1:
-        current_number += 1
-        future, _ = mqtt_connection.publish(
-            topic=topic_name,
-            payload=f"just a testing message {current_number}",
-            qos=mqtt.QoS.AT_LEAST_ONCE
-        )
-        time.sleep(1)
-
 def on_receive_message(topic, payload, dup, qos, retain, **kwargs):
     print("Received message from topic '{}': {}".format(topic, payload))
-
+    
 def get_cert_pubsub_iot_core():
-    thing_name = "SWIRE-SDK-finaltest8"
+    environment = "sit"
+    region = "global"
+    thing_name = "SWIRE-SDK-1203456"
+    # sit/global/VM1/#
     payload = {
         "ThingName": thing_name,
-        "ThingId": "5489851245",
-        "ThingSerialNumb": "SN20"
+        "ThingId": "5893452",
+        "ThingSerialNumb": "SN324"
     }
     url = " https://fb60-27-72-96-161.ap.ngrok.io/api/register_bulk_things_iot_core"
     response_data = requests.post(url, data=json.dumps(payload), stream=True)
@@ -44,7 +38,7 @@ def get_cert_pubsub_iot_core():
     root_CA = cert_data.get("root_CA")
     client_id = str(uuid.uuid4())
     
-    path_to_connection_files =  f"{ROOT_DIR}/cert_file/connection_credential"
+    path_to_connection_files =  f"{ROOT_DIR}/cert_file/connection_credential/{thing_name}"
     isExist = os.path.exists(path_to_connection_files)
     if not isExist:
         # Create a new directory because it does not exist 
@@ -70,19 +64,30 @@ def get_cert_pubsub_iot_core():
         pri_key_filepath=pri_key_filepath,
         ca_filepath=ca_filepath,
         client_id="d8a94edc-179f-4d56-97d8-623e31bf1d4c",
+        keep_alive_secs=30
     )
     future = mqtt_connection.connect()
     future.result()
-    topic_name = "andy_testing_topic"
+    topic_name = f"{environment}/{region}/{thing_name}/#"
     print(f"starting subcribe topic name {topic_name}")
-    mqtt_connection.subscribe(
+    path_zip_file = f"{path_to_connection_files}/cert.zip"
+    shutil.make_archive(path_zip_file, 'zip', path_to_connection_files)
+    
+    subscribe_future, packet_id = mqtt_connection.subscribe(
         topic=topic_name,
         qos=mqtt.QoS.AT_LEAST_ONCE,
         callback=on_receive_message
     )
-    print(f"publishing message to topic name {topic_name}")
-    publish_one_message_per_second(mqtt_connection, topic_name)
+    subscribe_result = subscribe_future.result()
+    print("Subscribed with {}".format(str(subscribe_result['qos'])))
+    if not receive_all_event.isSet():
+        print("Waiting for message")
+    receive_all_event.wait()
 
 
+receive_all_event = threading.Event()
 if __name__ == '__main__':
+    import time
     get_cert_pubsub_iot_core()
+
+    
