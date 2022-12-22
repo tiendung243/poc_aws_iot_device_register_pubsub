@@ -4,7 +4,6 @@ from django.http import HttpResponse
 from . import utils
 from django.views.decorators.csrf import csrf_exempt
 import json
-import zlib
 import zipfile
 
 @csrf_exempt

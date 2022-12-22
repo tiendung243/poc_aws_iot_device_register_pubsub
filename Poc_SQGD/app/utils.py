@@ -56,6 +56,7 @@ def create_thing_policy(iot_client, thing_name):
 
 def attach_certificate_to_thing(iot_client, thing_name, thing_policy_name, certificate_arn):
     print("attaching cert to thing...")
+    time.sleep(1)
     iot_client.attach_thing_principal(
                 thingName=thing_name, principal=certificate_arn)
     print("attaching policy to certificate...")
